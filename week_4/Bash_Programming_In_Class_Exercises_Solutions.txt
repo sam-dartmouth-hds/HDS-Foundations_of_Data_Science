@@ -1,0 +1,48 @@
+Bash Programming In Class Exercises
+
+In the directory for this week, I have provided you with a file called "pseudo_metadata.csv". This file creates some fake meta data for a small study of 10 participants.
+
+Navigate to the folder that contains your data folder.
+
+1) Count how many lines are in this file.
+
+wc -l "data/pseudo_metadata.csv"
+
+2) Subset this data frame to contain only the female participants and write out that meta data to a file called "only_female.txt".
+
+awk -F, 'NR==1 || $5=="\"F\""'  data/pseudo_metadata.csv >  data/females_metadata.csv
+
+3) Make a new directory called "new_dir". Copy the "females_metadata.csv" into your new directory. Make a new file called "notes.txt" in this directory. Write a few notes on the data in the "females_metadata.csv".
+
+mkdir -p data/new_dir
+
+cp data/females_metadata.csv data/new_dir/females_metadata.csv
+
+touch data/new_dir/notes.txt
+echo "These are my notes." > data/new_dir/notes.txt
+OR
+cd data/new_dir/
+notes.txt
+echo "These are my notes." > notes.txt
+
+4) Navigate into the new folder. Isolate the third and fourth columns in the data frame and write that out to a new file called "females_metadata_sub.csv".
+
+cd data/new_dir
+cut -d',' -f3,4 females_metadata.csv >> females_metadata_sub.csv
+
+5) List all of the files in your current directory. Navigate up one directory and then delete your "new_dir" with all of the files in it (very carefully!).
+
+ls
+cd ../
+rm -rf new_dir
+
+
+
+
+
+
+
+
+
+
+

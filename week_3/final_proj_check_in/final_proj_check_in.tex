@@ -1,0 +1,427 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},breaklines=true}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Weidner\_Samuel\_Final\_Proj\_Check\_In},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Weidner\_Samuel\_Final\_Proj\_Check\_In}
+\author{}
+\date{\vspace{-2.5em}2026-10}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{setwd}\NormalTok{(}\StringTok{"\textasciitilde{}/Dartmouth {-} Foundations of Data Science {-} R Studio/week\_3/final\_proj\_check\_in"}\NormalTok{)}
+\CommentTok{\# Set working directory}
+\NormalTok{filenames }\OtherTok{\textless{}{-}} \FunctionTok{list.files}\NormalTok{(}\FunctionTok{getwd}\NormalTok{(),}\AttributeTok{pattern =} \StringTok{".csv"}\NormalTok{) }\CommentTok{\# identify all csv files in the repo }
+\FunctionTok{print}\NormalTok{(filenames)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "counts.csv"    "meta_data.csv"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{proj\_data }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{()}
+
+\NormalTok{data\_path }\OtherTok{=} \StringTok{"\textasciitilde{}/Dartmouth {-} Foundations of Data Science {-} R Studio/week\_3/final\_proj\_check\_in/"}
+\CommentTok{\# Set out repo data path}
+\NormalTok{proj\_data}\SpecialCharTok{$}\NormalTok{counts }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(data\_path,filenames[}\DecValTok{1}\NormalTok{])) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# Read in counts data}
+  \FunctionTok{rename}\NormalTok{(}\AttributeTok{gene\_name =}\NormalTok{ X) }\CommentTok{\# set a descriptive column name for the genes}
+\NormalTok{proj\_data}\SpecialCharTok{$}\NormalTok{metadata }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(data\_path,filenames[}\DecValTok{2}\NormalTok{])) }\CommentTok{\# Read in metadata for covariates}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gene\_summary\_func }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(gene, gene\_data)\{ }
+  
+\NormalTok{  gene\_data\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene\_data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(gene\_name }\SpecialCharTok{==}\NormalTok{ gene) }\CommentTok{\# Subset data to our gene of interest}
+  
+  \CommentTok{\# Compute mean, median, max, min, std dev, and IQR}
+\NormalTok{  gene\_summary }\OtherTok{\textless{}{-}}\NormalTok{ gene\_data\_subset }\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{summarise}\NormalTok{( }\CommentTok{\# Use tidy summarize across our rows}
+    \AttributeTok{mean =} \FunctionTok{mean}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name)), }\CommentTok{\# c across allows us to use the tidy function here without reformatting out data}
+    \AttributeTok{median =} \FunctionTok{median}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name)),}
+    \AttributeTok{sd =} \FunctionTok{sd}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name)),}
+    \AttributeTok{max =} \FunctionTok{max}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name)),}
+    \AttributeTok{min =} \FunctionTok{min}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name)),}
+    \AttributeTok{IQR =} \FunctionTok{IQR}\NormalTok{(}\FunctionTok{c\_across}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name))}
+\NormalTok{  )}
+  
+  \FunctionTok{return}\NormalTok{(gene\_summary)}
+\NormalTok{\}}
+
+\NormalTok{selected\_gene }\OtherTok{=} \StringTok{"ENSG00000001461.17"} \CommentTok{\# Allow us to change gene as needed}
+
+\NormalTok{summary\_1461\_17 }\OtherTok{\textless{}{-}} \FunctionTok{gene\_summary\_func}\NormalTok{(selected\_gene, proj\_data}\SpecialCharTok{$}\NormalTok{counts) }
+
+\FunctionTok{print}\NormalTok{(summary\_1461\_17)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      mean median       sd   max min    IQR
+## 1 3079.09   2526 2118.437 15355 232 2272.5
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{selected\_gene2 }\OtherTok{\textless{}{-}} \StringTok{"ENSG00000001497.18"} \CommentTok{\# Set gene to plot first gene against }
+\NormalTok{covariate }\OtherTok{\textless{}{-}} \StringTok{"race"} \CommentTok{\# Set covariate}
+
+\NormalTok{gene\_visualize\_func }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(gene1, gene2, gene\_data, metadata, }\AttributeTok{covariate =} \ConstantTok{NULL}\NormalTok{)\{}
+  
+\NormalTok{  gene1\_data\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene\_data }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(gene\_name }\SpecialCharTok{==}\NormalTok{ gene1) }\CommentTok{\# Build gene1 data for histogram}
+  
+\NormalTok{  gene1\_2\_data\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene\_data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(gene\_name }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(gene1, gene2)) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# Subset gene data to two genes of interest from scatter}
+    \FunctionTok{pivot\_longer}\NormalTok{( }\CommentTok{\# Pivot format so it can be used easily in ggplot scatter}
+      \AttributeTok{cols =} \SpecialCharTok{{-}}\NormalTok{gene\_name,}
+      \AttributeTok{names\_to =} \StringTok{"sample\_id"}\NormalTok{,}
+      \AttributeTok{values\_to =} \StringTok{"expression\_value"}
+\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{pivot\_wider}\NormalTok{(}
+      \AttributeTok{names\_from =}\NormalTok{ gene\_name,}
+      \AttributeTok{values\_from =}\NormalTok{ expression\_value}
+\NormalTok{    )}
+  
+  \CommentTok{\# Pivot for plotting}
+  
+\NormalTok{  gene1\_long\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene1\_data\_subset }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{( }\CommentTok{\# Pivot to a gene 1 long dataset for plotting and easy joining to metadata covariate}
+    \AttributeTok{cols =} \SpecialCharTok{{-}}\NormalTok{gene\_name,}
+    \AttributeTok{names\_to =} \StringTok{"sample"}\NormalTok{,}
+    \AttributeTok{values\_to =} \StringTok{"expression\_value"}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{sample\_id\_clean =} \FunctionTok{gsub}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{"{-}"}\NormalTok{, sample)) }\CommentTok{\# Need to reformat the sample ID so it matches our metadata ID names}
+  
+  \CommentTok{\# Add the metadata covariate}
+  
+  \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{is.null}\NormalTok{(covariate)) \{ }\CommentTok{\# Check for covariate being set or not}
+\NormalTok{  plotting\_data\_gene1 }\OtherTok{\textless{}{-}}\NormalTok{ gene1\_long\_subset}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{  merging\_data }\OtherTok{\textless{}{-}}\NormalTok{ metadata }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(barcode, }\SpecialCharTok{!!}\FunctionTok{sym}\NormalTok{(covariate)) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# Need to find the column symbol from the provided covariate string}
+    \FunctionTok{rename}\NormalTok{(}\AttributeTok{sample\_id\_clean =}\NormalTok{ barcode, }\CommentTok{\# Rename so it can be joined easily to our gene expression data}
+           \AttributeTok{covariate\_value =} \SpecialCharTok{!!}\FunctionTok{sym}\NormalTok{(covariate)) }\CommentTok{\# Set name of the covariate column }
+
+\NormalTok{  plotting\_data\_gene1 }\OtherTok{\textless{}{-}}\NormalTok{ gene1\_long\_subset }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(merging\_data, }\AttributeTok{by =} \StringTok{"sample\_id\_clean"}\NormalTok{)}
+\NormalTok{  \} }\CommentTok{\# Join gene1 expressiond data with covariate for plotting}
+  
+  \CommentTok{\# Build Histogram}
+\NormalTok{  histogram }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(plotting\_data\_gene1, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ expression\_value)) }\SpecialCharTok{+} 
+    \FunctionTok{geom\_histogram}\NormalTok{(}
+      \AttributeTok{bins =} \DecValTok{10}\NormalTok{, }\CommentTok{\# Set bin size}
+      \AttributeTok{fill =} \StringTok{"darkgreen"}\NormalTok{,}
+      \AttributeTok{color =} \StringTok{"black"}\NormalTok{,}
+      \AttributeTok{alpha =} \FloatTok{0.7} \CommentTok{\# Set alpha for transparency}
+\NormalTok{    ) }\SpecialCharTok{+}
+    \FunctionTok{labs}\NormalTok{( }\CommentTok{\# set labeling}
+      \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(}\StringTok{"Expression:"}\NormalTok{, gene1),}
+      \AttributeTok{x =} \StringTok{"Expression Value"}\NormalTok{,}
+      \AttributeTok{y =} \StringTok{"Frequency"}
+\NormalTok{    ) }\SpecialCharTok{+}
+   \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{8}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{theme}\NormalTok{( }\CommentTok{\# Format size of title and labels}
+      \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}
+        \AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{,}
+        \AttributeTok{face =} \StringTok{"bold"}\NormalTok{,}
+        \AttributeTok{size =} \DecValTok{8}
+\NormalTok{      ),}
+      \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{), }\CommentTok{\# Bold axis titles}
+      \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{() }\CommentTok{\# Remove extra gridlines}
+\NormalTok{  )}
+  
+  \CommentTok{\# Build Scatter Plot}
+  
+\NormalTok{  scatter\_plot }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}
+\NormalTok{    gene1\_2\_data\_subset,}
+      \FunctionTok{aes}\NormalTok{(}
+        \AttributeTok{x =}\NormalTok{ .data[[gene1]], }\CommentTok{\# Set x and y for scatter }
+        \AttributeTok{y =}\NormalTok{ .data[[gene2]]}
+\NormalTok{      )}
+\NormalTok{  ) }\SpecialCharTok{+}
+    \FunctionTok{geom\_point}\NormalTok{(}
+      \AttributeTok{color =} \StringTok{"darkgreen"}\NormalTok{,}
+      \AttributeTok{alpha =} \FloatTok{0.6} \CommentTok{\# Set transparency for better readability of data density}
+\NormalTok{  ) }\SpecialCharTok{+}
+    \FunctionTok{labs}\NormalTok{(}
+      \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(gene1, }\StringTok{"vs"}\NormalTok{, gene2), }\CommentTok{\# Set title}
+        \AttributeTok{x =}\NormalTok{ gene1,}
+        \AttributeTok{y =}\NormalTok{ gene2}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{8}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{( }\CommentTok{\# Set formatting for label and text}
+    \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}
+      \AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{,}
+      \AttributeTok{face =} \StringTok{"bold"}\NormalTok{,}
+      \AttributeTok{size =} \DecValTok{8}
+\NormalTok{    ),}
+    \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{), }\CommentTok{\# Bold axis titles}
+    \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{() }\CommentTok{\# Remove extra gridlines}
+\NormalTok{  )}
+  
+  \CommentTok{\# Build Violin Plot}
+
+\NormalTok{  violin\_plot }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}
+\NormalTok{  plotting\_data\_gene1,}
+  \FunctionTok{aes}\NormalTok{(}
+    \AttributeTok{x =}\NormalTok{ expression\_value,}
+    \AttributeTok{y =}\NormalTok{ covariate\_value  }\CommentTok{\# Set covariate to measure by}
+\NormalTok{  )}
+\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_violin}\NormalTok{( }\CommentTok{\# Set theme formats }
+    \AttributeTok{fill =} \StringTok{"darkgreen"}\NormalTok{,}
+    \AttributeTok{color =} \StringTok{"black"}\NormalTok{,}
+    \AttributeTok{alpha =} \FloatTok{0.7}\NormalTok{,}
+    \AttributeTok{scale =} \StringTok{"width"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_jitter}\NormalTok{( }\CommentTok{\# Use jitter to plot actual distinct datapoints}
+    \AttributeTok{width =} \FloatTok{0.1}\NormalTok{, }
+    \AttributeTok{alpha =} \FloatTok{0.4}\NormalTok{,}
+    \AttributeTok{size =} \DecValTok{1}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{( }\CommentTok{\# Set labeling}
+    \AttributeTok{title =} \FunctionTok{paste}\NormalTok{(gene1, }\StringTok{"by"}\NormalTok{, }\StringTok{"AJCC Path Stage"}\NormalTok{),}
+    \AttributeTok{x =} \StringTok{"Expression Value"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Pathologic Stage"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{8}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{( }\CommentTok{\# Set formatting for label and text}
+    \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}
+      \AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{,}
+      \AttributeTok{face =} \StringTok{"bold"}\NormalTok{,}
+      \AttributeTok{size =} \DecValTok{8}
+\NormalTok{    ),}
+    \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{),}
+    \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{7}\NormalTok{),}
+    \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{()}
+\NormalTok{  )}
+  
+  \FunctionTok{grid.arrange}\NormalTok{( }\CommentTok{\# Put all plots on the same plane, two columns }
+\NormalTok{    histogram,}
+\NormalTok{    scatter\_plot,}
+\NormalTok{    violin\_plot,}
+    \AttributeTok{ncol =} \DecValTok{2}
+\NormalTok{  )}
+\NormalTok{\}}
+
+
+\FunctionTok{gene\_visualize\_func}\NormalTok{(selected\_gene, selected\_gene2, proj\_data}\SpecialCharTok{$}\NormalTok{counts,}
+\NormalTok{                                          proj\_data}\SpecialCharTok{$}\NormalTok{metadata, covariate) }\CommentTok{\# Display plots for our genes and covariate}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{final_proj_check_in_files/figure-latex/- Visualize Data-1} \end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{456}\NormalTok{) }\CommentTok{\# Set seed for reproducibility of the gene sample}
+
+\NormalTok{selected\_genes\_heatmap }\OtherTok{\textless{}{-}}\NormalTok{ proj\_data}\SpecialCharTok{$}\NormalTok{counts }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# Sample a set of genes for our heatmap}
+  \FunctionTok{slice\_sample}\NormalTok{(}\AttributeTok{n =} \DecValTok{10}\NormalTok{)}
+
+\NormalTok{heatmap\_genes\_list }\OtherTok{\textless{}{-}}\NormalTok{ selected\_genes\_heatmap}\SpecialCharTok{$}\NormalTok{gene\_name }\CommentTok{\# create list for function input}
+  
+\NormalTok{covariate\_heatmap }\OtherTok{\textless{}{-}} \StringTok{"race"} \CommentTok{\# set covariate}
+
+\NormalTok{gene\_heatmap\_func }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(gene\_list, gene\_data, metadata, covariate)\{}
+  
+\NormalTok{  gene\_heatmap\_data\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene\_data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(gene\_name }\SpecialCharTok{\%in\%}\NormalTok{ gene\_list) }\CommentTok{\# filter data to the listed genes}
+    
+    
+  \FunctionTok{rownames}\NormalTok{(gene\_heatmap\_data\_subset) }\OtherTok{\textless{}{-}}\NormalTok{ gene\_heatmap\_data\_subset[[}\DecValTok{1}\NormalTok{]] }\CommentTok{\# set rownames for matrix in heatmap}
+  
+\NormalTok{  gene\_heatmap\_data\_subset }\OtherTok{\textless{}{-}}\NormalTok{ gene\_heatmap\_data\_subset }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{gene\_name) }\CommentTok{\# remove the genename so we have a clean matrix for the heatmap}
+
+  \CommentTok{\# Get covariate data}
+  
+\NormalTok{  covariate\_data }\OtherTok{\textless{}{-}}\NormalTok{ metadata }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(barcode, }\SpecialCharTok{!!}\FunctionTok{sym}\NormalTok{(covariate)) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# pull covariate data, using symbol to convert the covariate parameter input}
+    \FunctionTok{rename}\NormalTok{(}\AttributeTok{sample\_id =}\NormalTok{ barcode, }\CommentTok{\# rename to sample\_id}
+           \AttributeTok{covariate\_value =} \SpecialCharTok{!!}\FunctionTok{sym}\NormalTok{(covariate)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{sample\_id\_clean =} \FunctionTok{gsub}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{{-}"}\NormalTok{, }\StringTok{"."}\NormalTok{, sample\_id)) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\# reformat the sample id so it can be matched to the sample IDs in expression data}
+    \FunctionTok{select}\NormalTok{(sample\_id\_clean, covariate\_value)}
+  
+  
+\NormalTok{  covariate\_ordered }\OtherTok{\textless{}{-}}\NormalTok{ covariate\_data }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{slice}\NormalTok{(}\FunctionTok{match}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(gene\_heatmap\_data\_subset), sample\_id\_clean)) }\CommentTok{\# match the covariate data order to the heatmap expression data order so samples are matched correctly to their covariate value in the heatmap}
+  
+\NormalTok{  annotation\_data }\OtherTok{\textless{}{-}}\NormalTok{ covariate\_ordered }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(covariate\_value) }\CommentTok{\# select the value alone }
+
+  \FunctionTok{rownames}\NormalTok{(annotation\_data) }\OtherTok{\textless{}{-}}\NormalTok{ covariate\_ordered}\SpecialCharTok{$}\NormalTok{sample\_id\_clean }\CommentTok{\# set rownames}
+  
+\NormalTok{  covariate\_levels }\OtherTok{\textless{}{-}} \FunctionTok{unique}\NormalTok{(}\FunctionTok{na.omit}\NormalTok{(annotation\_data}\SpecialCharTok{$}\NormalTok{covariate\_value)) }\CommentTok{\# Get unique non{-}missing covariate categories}
+
+  \CommentTok{\# Generate named colors for covariate to use in the heatmap annotation label}
+\NormalTok{  covariate\_colors }\OtherTok{\textless{}{-}} \FunctionTok{setNames}\NormalTok{(}
+\NormalTok{    circlize}\SpecialCharTok{::}\FunctionTok{rand\_color}\NormalTok{(}\FunctionTok{length}\NormalTok{(covariate\_levels)),}
+\NormalTok{    covariate\_levels}
+\NormalTok{  )}
+
+  \CommentTok{\# Create annotation}
+\NormalTok{  column\_ha }\OtherTok{\textless{}{-}} \FunctionTok{HeatmapAnnotation}\NormalTok{(}
+    \AttributeTok{Covariate =}\NormalTok{ annotation\_data}\SpecialCharTok{$}\NormalTok{covariate\_value, }\CommentTok{\# values to annotate}
+    \AttributeTok{col =} \FunctionTok{list}\NormalTok{(}
+      \AttributeTok{Covariate =}\NormalTok{ covariate\_colors }\CommentTok{\# Set colors for annotation}
+\NormalTok{    ),}
+    \AttributeTok{na\_col =} \StringTok{"grey"}\NormalTok{, }\CommentTok{\# set NA covariate values to grey}
+    \AttributeTok{annotation\_legend\_param =} \FunctionTok{list}\NormalTok{( }\CommentTok{\# add size of legend}
+      \AttributeTok{Covariate =} \FunctionTok{list}\NormalTok{(}
+        \AttributeTok{title =}\NormalTok{ covariate,}
+        \AttributeTok{title\_gp =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{gpar}\NormalTok{(}\AttributeTok{fontsize =} \DecValTok{6}\NormalTok{, }\AttributeTok{fontface =} \StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{labels\_gp =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{gpar}\NormalTok{(}\AttributeTok{fontsize =} \DecValTok{7}\NormalTok{),}
+        \AttributeTok{grid\_width =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{unit}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\StringTok{"cm"}\NormalTok{),}
+        \AttributeTok{grid\_height =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{unit}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\StringTok{"cm"}\NormalTok{)}
+\NormalTok{      )}
+\NormalTok{    )}
+\NormalTok{  )}
+  
+  \CommentTok{\# Scale data because the selected genes have very different expression levels, making it hard to interpret}
+  
+\NormalTok{  gene\_heatmap\_matrix }\OtherTok{\textless{}{-}} \FunctionTok{log2}\NormalTok{(}
+    \FunctionTok{as.matrix}\NormalTok{(gene\_heatmap\_data\_subset) }\SpecialCharTok{+} \DecValTok{1} \CommentTok{\# use a Log2 scale to make proportional changes look linear}
+\NormalTok{  )}
+    
+  \FunctionTok{Heatmap}\NormalTok{( }\CommentTok{\# run heatmap function with our matrix of data}
+    \FunctionTok{as.matrix}\NormalTok{(gene\_heatmap\_matrix), }
+    \AttributeTok{name =} \StringTok{"Expression Values"}\NormalTok{,}
+    \AttributeTok{width =} \FunctionTok{unit}\NormalTok{(}\FloatTok{4.5}\NormalTok{, }\StringTok{"cm"}\NormalTok{),}
+    \AttributeTok{height =} \FunctionTok{unit}\NormalTok{(}\DecValTok{5}\NormalTok{, }\StringTok{"cm"}\NormalTok{),}
+    \AttributeTok{top\_annotation =}\NormalTok{ column\_ha, }\CommentTok{\# add annotation data}
+    \AttributeTok{show\_row\_names =} \ConstantTok{TRUE}\NormalTok{, }\CommentTok{\# shows genes on the rows}
+    \AttributeTok{show\_column\_names =} \ConstantTok{FALSE}\NormalTok{, }\CommentTok{\# don\textquotesingle{}t show columns, because we have over 1200 samples}
+    \AttributeTok{cluster\_columns =} \ConstantTok{FALSE}\NormalTok{, }\CommentTok{\# similarly don\textquotesingle{}t cluster samples due to amount}
+    \AttributeTok{cluster\_rows =} \ConstantTok{TRUE}\NormalTok{,}
+    \AttributeTok{column\_title =} \StringTok{"Samples"}\NormalTok{,}
+    \AttributeTok{row\_title =} \StringTok{"Genes"}\NormalTok{,}
+    \AttributeTok{heatmap\_legend\_param =} \FunctionTok{list}\NormalTok{(}
+      \AttributeTok{title =} \StringTok{"Count"}\NormalTok{,}
+      \AttributeTok{title\_gp =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{gpar}\NormalTok{(}\AttributeTok{fontsize =} \DecValTok{8}\NormalTok{, }\AttributeTok{fontface =} \StringTok{"bold"}\NormalTok{),}
+      \AttributeTok{labels\_gp =}\NormalTok{ grid}\SpecialCharTok{::}\FunctionTok{gpar}\NormalTok{(}\AttributeTok{fontsize =} \DecValTok{7}\NormalTok{),}
+      \AttributeTok{direction =} \StringTok{"horizontal"}
+\NormalTok{      )}
+\NormalTok{    )}
+\NormalTok{\}}
+
+
+\FunctionTok{gene\_heatmap\_func}\NormalTok{(heatmap\_genes\_list, proj\_data}\SpecialCharTok{$}\NormalTok{counts,}
+\NormalTok{                    proj\_data}\SpecialCharTok{$}\NormalTok{metadata, covariate\_heatmap)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{final_proj_check_in_files/figure-latex/- Heatmap-1} \end{center}
+
+\end{document}
