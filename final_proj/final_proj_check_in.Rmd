@@ -22,11 +22,15 @@ library(gridExtra) # A package that helps arranging ggplot objects
 library(ggpubr) # For the statistical tests - e.g. Wilcoxon rank sum test
 library(ComplexHeatmap) # Heatmap package
 library(circlize) # Used for heatmap color generation
+library(EnhancedVolcano) # Used for volcano plot generation
+library(DESeq2) # Used for the differential testing needed for volcano plotting
 library(grid) # for formatting
+library(knitr)
+library(kableExtra)
 ```
 
 ```{r - Find Data Files}
-setwd("~/Dartmouth - Foundations of Data Science - R Studio/week_3/final_proj_check_in")
+setwd("~/Documents/GitHub/HDS-Foundations_of_Data_Science/week_3/final_proj_check_in")
 # Set working directory
 filenames <- list.files(getwd(),pattern = ".csv") # identify all csv files in the repo 
 print(filenames)
@@ -35,11 +39,18 @@ print(filenames)
 ```{r - Read Data}
 proj_data <- list()
 
-data_path = "~/Dartmouth - Foundations of Data Science - R Studio/week_3/final_proj_check_in/"
+data_path = "~/Documents/GitHub/HDS-Foundations_of_Data_Science/week_3/final_proj_check_in/"
 # Set out repo data path
+proj_data$gene_mapping <- read.csv(paste0(data_path, filenames[2]))
 proj_data$counts <- read.csv(paste0(data_path,filenames[1])) %>% # Read in counts data
-  rename(gene_name = X) # set a descriptive column name for the genes
-proj_data$metadata <- read.csv(paste0(data_path,filenames[2])) # Read in metadata for covariates
+  dplyr::rename(gene_name = X) # set a descriptive column name for the genes
+proj_data$metadata <- read.csv(paste0(data_path,filenames[3])) # Read in metadata for covariates
+
+proj_data$counts_v2 <- proj_data$counts %>%
+  dplyr::rename(ensembl_id = gene_name) %>%
+  inner_join(proj_data$gene_mapping, by = 'ensembl_id') %>%
+  select(-ensembl_id) %>%
+  select(last_col(), everything())
 ```
 
 
@@ -65,19 +76,77 @@ gene_summary_func <- function(gene, gene_data){
   return(gene_summary)
 }
 
-selected_gene = "ENSG00000001461.17" # Allow us to change gene as needed
+covariate_summary_func <- function(metadata, covariate){
+  
+  covariate_summary <- metadata %>%
+    select(!!sym(covariate)) %>%
+    summarise(
+      mean = mean(!!sym(covariate), na.rm = T),
+      median = median(!!sym(covariate), na.rm = T),
+      sd = sd(!!sym(covariate), na.rm = T),
+      max = max(!!sym(covariate), na.rm = T),
+      min = min(!!sym(covariate), na.rm = T),
+      IQR = IQR(!!sym(covariate), na.rm = T)
+    )
+  
+  return(covariate_summary)
+}
 
-summary_1461_17 <- gene_summary_func(selected_gene, proj_data$counts) 
+selected_gene = "TP53" # Allow us to change gene as needed
+selected_gene2 <- "BRCA1"
+covariate_to_summarize <- "age_at_index"
 
-print(summary_1461_17)
+summary_tp53 <- gene_summary_func(selected_gene, proj_data$counts_v2) 
+summary_brca1 <- gene_summary_func(selected_gene2, proj_data$counts_v2)
+summary_age<- covariate_summary_func(proj_data$metadata, covariate_to_summarize)
+
+print(summary_tp53)
+print(summary_brca1)
+print(summary_age)
+
+# Bind the rows together and add the Gene names back
+combined_summary_genes <- bind_rows(
+  mutate(summary_tp53, Gene = "TP53"),
+  mutate(summary_brca1, Gene = "BRCA1")
+) %>%
+  select(Gene, everything()) # Reorder to put Gene first
+
+# Generate Latex code 
+# Generate the LaTeX table
+latex_code_genes <- combined_summary_genes %>%
+  kbl(
+    format = "latex",
+    booktabs = TRUE,
+    digits = 2, # Round numbers to 2 decimal places
+    caption = "Summary Statistics for TP53 and BRCA1 Expression Across Samples",
+    label = "gene_stats",
+    col.names = c("Gene", "Mean", "Median", "Std. Dev.", "Max", "Min", "IQR")
+  ) %>%
+  kable_styling(latex_options = c("hold_position")) # Keeps the table from floating away
+
+latex_code_age <- summary_age %>%
+  kbl(
+    format = "latex",
+    booktabs = TRUE,
+    digits = 2, # Round numbers to 2 decimal places
+    caption = "Summary Statistics for Cohort Age",
+    label = "age_stats",
+    col.names = c("Mean", "Median", "Std. Dev.", "Max", "Min", "IQR")
+  ) %>%
+  kable_styling(latex_options = c("hold_position")) # Keeps the table from floating away
+
+
+# Print the LaTeX code to your console
+print(latex_code_genes)
+print(latex_code_age)
 
 ```
 
 
 ```{r - Visualize Data}
 
-selected_gene2 <- "ENSG00000001497.18" # Set gene to plot first gene against 
-covariate <- "race" # Set covariate
+selected_gene2 <- "BRCA1" # Set gene to plot first gene against 
+covariate <- "prior_treatment" # Set covariate
 
 gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = NULL){
   
@@ -90,6 +159,9 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
       cols = -gene_name,
       names_to = "sample_id",
       values_to = "expression_value"
+    ) %>%
+    mutate(
+      expression_value = log2(expression_value + 1)
     ) %>%
     pivot_wider(
       names_from = gene_name,
@@ -104,7 +176,8 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
     names_to = "sample",
     values_to = "expression_value"
   ) %>% 
-  mutate(sample_id_clean = gsub("\\.", "-", sample)) # Need to reformat the sample ID so it matches our metadata ID names
+  mutate(sample_id_clean = gsub("\\.", "-", sample),
+         expression_value = log2(expression_value + 1)) # Need to reformat the sample ID so it matches our metadata ID names
   
   # Add the metadata covariate
   
@@ -113,7 +186,7 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
   } else {
   merging_data <- metadata %>%
     select(barcode, !!sym(covariate)) %>% # Need to find the column symbol from the provided covariate string
-    rename(sample_id_clean = barcode, # Rename so it can be joined easily to our gene expression data
+    dplyr::rename(sample_id_clean = barcode, # Rename so it can be joined easily to our gene expression data
            covariate_value = !!sym(covariate)) # Set name of the covariate column 
 
   plotting_data_gene1 <- gene1_long_subset %>%
@@ -174,6 +247,8 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
   )
   
   # Build Violin Plot
+  
+  covariate_string <- str_replace_all(covariate, "_", " ")
 
   violin_plot <- ggplot(
   plotting_data_gene1,
@@ -190,13 +265,14 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
   ) +
   geom_jitter( # Use jitter to plot actual distinct datapoints
     width = 0.1, 
-    alpha = 0.4,
+    alpha = 0.2,
+    color = "blue",
     size = 1
   ) +
   labs( # Set labeling
-    title = paste(gene1, "by", "AJCC Path Stage"),
+    title = paste(gene1, "by", covariate_string),
     x = "Expression Value",
-    y = "Pathologic Stage"
+    y = covariate_string
   ) +
   theme_minimal(base_size = 8) +
   theme( # Set formatting for label and text
@@ -218,24 +294,31 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
   )
 }
 
+png("gene_plots.png", width = 6, height = 4.5, units = "in", res = 300)
 
-gene_visualize_func(selected_gene, selected_gene2, proj_data$counts,
+gene_visualize_func(selected_gene, selected_gene2, proj_data$counts_v2,
                                           proj_data$metadata, covariate) # Display plots for our genes and covariate
 
+dev.off()
+
 ```
+
+
 
 ```{r - Heatmap}
 
 set.seed(456) # Set seed for reproducibility of the gene sample
 
 selected_genes_heatmap <- proj_data$counts %>% # Sample a set of genes for our heatmap
-  slice_sample(n = 10)
+  dplyr::slice_sample(n = 10)
 
 heatmap_genes_list <- selected_genes_heatmap$gene_name # create list for function input
   
-covariate_heatmap <- "race" # set covariate
+covariate_heatmap <- "prior_treatment" # set covariate
 
 gene_heatmap_func <- function(gene_list, gene_data, metadata, covariate){
+  
+  covariate_string <- str_replace_all(covariate, "_", " ")
   
   gene_heatmap_data_subset <- gene_data %>%
     filter(gene_name %in% gene_list) # filter data to the listed genes
@@ -246,22 +329,30 @@ gene_heatmap_func <- function(gene_list, gene_data, metadata, covariate){
   gene_heatmap_data_subset <- gene_heatmap_data_subset %>%
     select(-gene_name) # remove the genename so we have a clean matrix for the heatmap
 
-  # Get covariate data
+  # 1. Get and sort covariate data by the covariate value
+  covariate_ordered <- metadata %>%
+    select(barcode, !!sym(covariate)) %>% 
+    dplyr::rename(sample_id = barcode, covariate_value = !!sym(covariate)) %>%
+    mutate(sample_id_clean = gsub("\\-", ".", sample_id)) %>% 
+    select(sample_id_clean, covariate_value) %>%
+    # Filter to only keep metadata for samples that actually exist in the matrix columns
+    filter(sample_id_clean %in% colnames(gene_heatmap_data_subset)) %>%
+    # This orders your annotation bar cleanly
+    arrange(covariate_value) 
   
-  covariate_data <- metadata %>%
-    select(barcode, !!sym(covariate)) %>% # pull covariate data, using symbol to convert the covariate parameter input
-    rename(sample_id = barcode, # rename to sample_id
-           covariate_value = !!sym(covariate)) %>%
-    mutate(sample_id_clean = gsub("\\-", ".", sample_id)) %>% # reformat the sample id so it can be matched to the sample IDs in expression data
-    select(sample_id_clean, covariate_value)
-  
-  
-  covariate_ordered <- covariate_data %>% 
-    slice(match(colnames(gene_heatmap_data_subset), sample_id_clean)) # match the covariate data order to the heatmap expression data order so samples are matched correctly to their covariate value in the heatmap
+  # 2. Reorder the matrix columns to match the sorted metadata
+  gene_heatmap_data_subset <- gene_heatmap_data_subset %>%
+    select(all_of(covariate_ordered$sample_id_clean))
+
+  # 3. Create the annotation object exactly matched to the new order
+  annotation_data <- covariate_ordered %>%
+    select(covariate_value) 
+    
+  rownames(annotation_data) <- covariate_ordered$sample_id_clean
   
   annotation_data <- covariate_ordered %>%
     select(covariate_value) # select the value alone 
-
+    
   rownames(annotation_data) <- covariate_ordered$sample_id_clean # set rownames
   
   covariate_levels <- unique(na.omit(annotation_data$covariate_value)) # Get unique non-missing covariate categories
@@ -281,7 +372,7 @@ gene_heatmap_func <- function(gene_list, gene_data, metadata, covariate){
     na_col = "grey", # set NA covariate values to grey
     annotation_legend_param = list( # add size of legend
       Covariate = list(
-        title = covariate,
+        title = covariate_string,
         title_gp = grid::gpar(fontsize = 6, fontface = "bold"),
         labels_gp = grid::gpar(fontsize = 7),
         grid_width = grid::unit(0.2, "cm"),
@@ -317,8 +408,117 @@ gene_heatmap_func <- function(gene_list, gene_data, metadata, covariate){
     )
 }
 
+png("heatmap.png", width = 6, height = 4.5, units = "in", res = 300)
+
 
 gene_heatmap_func(heatmap_genes_list, proj_data$counts,
                     proj_data$metadata, covariate_heatmap)
 
+
+dev.off()
+
+```
+
+```{r - Volcano}
+
+# 1. Expression matrix setup
+counts_df <- proj_data$counts
+gene_names <- counts_df$gene_name
+
+counts_matrix <- as.matrix(counts_df %>% select(-gene_name))
+rownames(counts_matrix) <- gene_names
+
+# 2. Metadata setup (dynamically maps covariate to 'treatment')
+covariate <- "prior_treatment"  # Set your target covariate here
+
+metadata <- proj_data$metadata %>%
+  select(barcode, !!sym(covariate)) %>%   # Added missing pipe here
+  dplyr::rename(
+    sample_id = barcode, 
+    treatment = !!sym(covariate)         # Renamed directly to 'treatment' to match downstream code
+  ) %>%
+  mutate(sample_id_clean = gsub("\\-", ".", sample_id)) %>% 
+  select(sample_id_clean, treatment) %>%
+  filter(treatment %in% c("Yes","No")) %>% # Filter down to the two covariate groups of interest 
+  as.data.frame()
+
+rownames(metadata) <- metadata$sample_id_clean
+
+# 3. FIX: Filter and align counts matrix to match the filtered metadata samples
+# Keep only columns that exist in our clean metadata, in the exact same order
+counts_matrix <- counts_matrix[, rownames(metadata), drop = FALSE]
+
+# Validate alignment
+stopifnot(identical(rownames(metadata), colnames(counts_matrix)))
+
+# Ensure treatment groups are a correctly ordered factor
+# Note: Ensure "Control" and "Treatment" exactly match the string values in your data
+metadata$treatment <- factor(
+  trimws(as.character(metadata$treatment)),
+  levels = c("Yes", "No") 
+)
+
+if (anyNA(metadata$treatment)) {
+  stop("Treatment contains missing or unexpected values. Check your metadata labels.")
+}
+
+# 3. Run DESeq2 Pipeline
+dds <- DESeqDataSetFromMatrix(
+  countData = counts_matrix,
+  colData = metadata,
+  design = ~ treatment
+)
+
+#dds <- dds[rowSums(counts(dds)) >= 10, ]
+dds <- DESeq(dds)
+
+res <- results(dds, contrast = c("treatment", "No", "Yes"))
+results_df <- as.data.frame(res)
+results_df$gene_name <- rownames(results_df)
+
+# 4. Filter and Prep Data for Volcano Plot
+volcano_data <- results_df %>%
+  filter(!is.na(padj), !is.na(log2FoldChange))
+
+png("volcano_plot.png", width = 7, height = 8, units = "in", res = 300)
+
+# 5. Generate Enhanced Volcano Plot
+EnhancedVolcano(
+  volcano_data,
+  lab = volcano_data$gene_name,
+  x = "log2FoldChange",
+  y = "padj",                  # Using adjusted p-values
+
+  # Significance thresholds
+  pCutoff = 0.05,
+  FCcutoff = 1.0,
+
+  # Labels and formatting
+  title = "Differential Gene Expression",
+  subtitle = "No Prior Treatment vs Prior Treatment",
+  xlab = bquote(~Log[2] ~ "Expression Value Change"),
+  ylab = bquote(~-Log[10] ~ "Adjusted P-value"), # Explicitly labeling it as adjusted
+
+  # Legend Labels
+  legendLabels = c(
+    "Not Significant", 
+    "High Expression Change", 
+    "Significant", 
+    "Significant & High Expression Change"
+  ),
+  legendLabSize = 8,       # legend text size
+  legendIconSize = 1.5,     # legend icon size
+  
+  # Formatting
+  pointSize = 2.0,
+  labSize = 4.0,
+
+  # Visual enhancements to prevent overlapping text
+  drawConnectors = TRUE,
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  max.overlaps = 20
+)
+
+dev.off()
 ```

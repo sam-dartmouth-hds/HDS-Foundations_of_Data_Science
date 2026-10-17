@@ -1,0 +1,466 @@
+---
+title: "Lecture_5_Introduction_to_Machine_Learning"
+output: pdf_document
+date: "2026-08"
+---
+
+# Introduction to Machine Learning with R
+
+## What is Machine Learning
+
+Machine learning (ML) is a branch of artificial intelligence that seeks to develop algorithms based on input data to generate predictions or classifications on unseen data. Examples of machine learning applications are seen across a variety of fields, from finance to healthcare. For example, a stockbroker may apply data scraped from X, TikTok, Instagram, Facebook, or the news to her algorithm to capture social factors impacting trading and adequately predict trends in the stock market. Similarly, a clinical scientist may include histology staining and deleterious genetic markers to classify cancer subtypes. 
+
+It's easy to get excited about implementing ML algorithms in your research given its popularity, but it is important to take the time to understand the statistical framework behind your models. Today we will be exploring classical machine learning using the R package CARET: Classification and Regression Training. CARET provides functionality to conduct the following tasks: 
+
+* Data Cleaning
+* Data Splitting
+* Model Fitting
+* Data Resampling for Parameter Tuning
+* Feature Selection
+* Predictive Modeling
+* Performance Testing
+
+## Data Cleaning
+
+CARET is powerful, but it does not provide functionality to remove contaminants, conduct log10 transformations, or perform probabilistic quotient normalization. These pre-processing steps, while important, are beyond the scope of this bootcamp, but the QBS program offers classes in ML that can provide in depth instruction on additional data cleaning. 
+
+```{r setup, results='hide', message=FALSE, warning=FALSE}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       READ IN LIBRARIES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+packages <- c("RANN", "tidyverse", "caret")
+
+for (pkg in packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+  library(pkg, character.only = TRUE)
+}
+```
+
+
+CARET includes built in data with which we can begin our foray into machine learning. Today I have chosen a particularly disgusting data set for us to explore. This data set is known as the *scat* data set. In 2015, the Reid group collected data on animal feces in coastal California. We will be using the data on the animal feces, which includes collection information, size, shape, and consistency of the samples collected, to predict which animal may have produced the feces. 
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                     READ IN SCAT DATA
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+data(scat)
+
+# Let's take a look at what our data look like
+head(scat)
+
+# Let's see how many observations and variables are in our example data
+dim(scat)
+scat |> glimpse()
+
+# How many categories are in our classification? 
+levels(scat$Species)
+
+# Is there any missing data in our example data? 
+sum(is.na(scat))
+```
+
+It looks like our example data contains 110 observations and 19 variables. Our end classifications are bobcat, coyote, and gray_fox. Before we impute, we are going to split the data.
+
+## Splitting Data
+
+Now we are ready to conduct data splitting. We will be splitting our data into a training set and a testing set. Typically, we split the data randomly into 2/3 training and 1/3 testing. 
+
+Note that this can be adjusted depending on our data set. In the case of data sets with a large number of end classifications, it might be wise to conduct stratified splitting, ensuring that the split is done evenly across classes of interest by splitting within each class.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         DATA SPLITTING
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# We will set a seed so we end up with the same split 
+set.seed(3456)
+
+# This code splits our data 
+trainIndex <- createDataPartition(scat$Species, p = 2/3,
+                                  list = FALSE,
+                                  times = 1)
+
+# We assign the 2/3 of data to a training set variable
+Train <- scat[trainIndex,]
+
+# We assign the remaining 1/3 of data to a testing set variable
+Test <- scat[-trainIndex,]
+
+# Let's take a look at the dimensions of our training and testing set
+dim(Train)
+dim(Test)
+```
+
+Our data has now been split into a training and testing set! 
+
+But remember, using `is.na()`, we determined that we have some rows with missing data that will need cleaning. In the below code block we employ imputation, centering, and scaling to clean our data. After that is complete, I always like to make sure that the imputation worked by, again, checking for missing data.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         DATA CLEANING
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# We will use KNN imputation, but there is also the option for tree bagging
+preProcValues <- preProcess(Train, method = c("knnImpute", "center", "scale"))
+
+# Look at what will be changed
+preProcValues
+Train_clean <- predict(preProcValues, Train)
+Test_clean  <- predict(preProcValues, Test)
+
+# Is there any missing data in our example data? 
+sum(is.na(Train_clean))
+sum(is.na(Test_clean))
+
+all_clean <- rbind(Train_clean, Test_clean)
+dim(scat); dim(all_clean)                 # should match
+colSums(is.na(all_clean))                 # the 15 processed columns should be 0
+
+```
+
+Looks like our imputation worked! The 15 numeric columns are imputed (missing values filled by 5-nearest-neighbors), then centered and scaled, so each has mean about 0 and SD about 1.
+The 4 ignored columns are passed through unchanged.
+
+## Model Fitting
+
+Now comes the fun part: we get to pick a model, and there are so many to choose from. Here is a little run down of a few models you might wish to explore: 
+
+* Random Forest - a random forest model builds a series of decision trees, where each tree is built from a random subset of the data, including variables. A subset of variables are selected at each level of the tree according to which best split the data into groups. 
+  - Limitation Alert: Random forest models work really well on the data on which they are trained, but are often times inaccurate when they are applied. This is called overfitting and can show really high accuract on the Train set but then fail spectacularly on Test data. This is why we split the data and why we use Cross-Validation.
+
+* Support Vector Machine - a support vector machine finds a hyperplane to best divide data defined by support vectors (i.e., coordinates) in n-dimensional space. In other words, we move low dimensional data into a higher dimensional space by leveraging a kernal function and cross validation to find an optimal transformation. Then we find the best plane that divides our data into classifications. 
+  - Advantage Alert: One of the major advantages of SVMs is that they can handle outliers 
+  
+* Partial Least Squares Discriminant Analysis (PLS-DA) - PLS-DA is a dimensionality reduction method that incorporates labels in the analysis. PLS-DA uses labels to find the direction of maximum class separation, where principal component analysis (PCA) simply maximizes variance without label information. 
+
+* K-Nearest Neighbor (KNN) - KNN is a non-parametric supervised learning method that uses proximity to make predictions and classifications. 
+
+* Elastic Net - elastic net regression combines the lasso regression penalty with the ridge regression penalty. This eliminates our need to decide whether to select a lasso or ridge regression off the bat because elastic net will shrink the penalty that isn't that consequential. Lasso and ridge regression are beyond the scope of this class, but you will have extensive instruction on this during your time in Health Data Science!
+
+So which of these models is appropriate for our data set? As a general rule of thumb, you must ALWAYS understand the basic algorithm you are using, its strengths and weaknesses, and what assumptions are inherent. 
+
+CARET has a wrapper of over 200 kinds of models. You can see all of these using `names(getModelInfo())`. 
+
+For our data set, we will employ the random forest model, code for which can be found below: 
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       INITAL MODEL FITTING
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# In this line of code we are indicating that we will be using the default parameters. In our next step this will change because we will be tuning some parameters.
+fitControl <- trainControl(method = "none")
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# Conduct model fitting
+Fit1 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl,
+              verbose = FALSE)
+
+# Other Methods: “pls” for PLS-DA, “svmLinear” for linear svm, “svmRadial”, “knn”, “glmnet” for elastic net
+
+Fit1
+```
+## Cross Validation
+
+Inherent to each model are a collection of parameters which need to be tuned for best model performance. If re-sampling is not done and parameters are not specified, then default values are used, as we have done in the above code. To properly tune parameters, we use re-sampling procedures. When we do this, we take some portion of the training set to fit a model to, and then test it's performance on the with-held portion of the training set to avoid overfitting. There are several methods for resampling: 
+
+* K-fold Cross Validation - split the data into k approximately even sized pieces, we train on k-1 samples and test on the remaining. This process is repeated k times and enure that the piece remaining changes with each iteration. Common choices for k are 5 or 3. 
+
+```{r, out.width="90%", fig.align="center", fig.pos="H"}
+knitr::include_graphics("../images/K-fold_Cross_Validation.png")
+```
+
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       K-FOLD CROSS VALIDATION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# k-fold cross validation
+fitControl <- trainControl(method = "cv", number = 5)
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# Conduct model fitting
+Fit2 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl,
+              verbose = FALSE)
+
+Fit2
+```
+
+* Repeated K-fold Cross Validation - k-fold cross validation, but you repeat the process R times where each time you split the data in a different spot. This method of cross validation is robust to "bad" cuts of the data. 
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 REPEATED K-FOLD CROSS VALIDATION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# repeated k-fold cross validation
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 5,
+                           repeats = 10)
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# Conduct model fitting
+Fit3 <- train(Species ~ ., data = Train_clean, method = "rf", trControl = fitControl, verbose = FALSE)
+
+Fit3
+```
+
+* Leave-One-Out-Cross Validation - like k-fold cross validation, except you leave only 1 sample out for testing each time. This is consequentially the same a k-fold cross validation if k=n. A major limitation of this method is overfitting, which is why this method is seldom used save for very small data sets to provide some degree of generalizability.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                 LEAVE-ONE-OUT CROSS VALIDATION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Leave one out cross validation
+fitControl <- trainControl(method = "LOOCV")
+
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# Conduct model fitting
+Fit4 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl,
+              verbose = FALSE)
+
+Fit4
+```
+
+* Bootstrapping - re-sample from the training set, with replacement, until you hit a training set of the same size as your first set. Build a model on this new re-sampled training set, test on any samples not included in the original set. Repeat this many times.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         BOOTSTRAPPING
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Leave one out cross validation
+fitControl <- trainControl(method = "boot",
+                           number = 100)
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# Conduct model fitting
+Fit5 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl)
+
+Fit5
+```
+
+* Grid Search - tries out all the possible combinations of hyperparameters in a predefined grid. The default number of parameters tested over a grid is 3, but this can be easily increased to test more parameter values.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         GRID SEARCH
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Note that this is the same as the bootstrapping!
+fitControl <- trainControl(method = "boot",
+                           number = 100)
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# NOTE: tuneLength = 5 here, this is the grid search! 
+Fit6 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl,
+              tuneLength = 5) # This is different than Fit5
+
+Fit6
+```
+
+* Class Imbalance - our data would be considered unbalanced if there is many more samples in one class compared to another. As mentioned earlier, it is good to know the strengths and weaknesses of our models. Some algorithms are sensitive to class imbalance, including random forest and k-nearest neighbor. This can sometimes be improved using up or down sampling. 
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         CLASS IMBALANCE
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Note that this is the same as the bootstrapping, but here we add downsampling!
+fitControl <- trainControl(method = "boot",
+                           number = 100,
+                           sampling = "down")
+
+# We will set a seed so we end up with the same split 
+set.seed(825) 
+
+# NOTE: tuneLength = 5 here
+Fit7 <- train(Species ~ .,
+              data = Train_clean,
+              method = "rf",
+              trControl = fitControl,
+              tuneLength = 5)
+
+Fit7
+```
+
+Explain results:
+-mtry: the number of variables randomly made available at each split (can be more than the number of columns because categorical/factor predictors can get one-hot encoded (dummy-coded) behind the scenes before being handed to the model)
+-accuracy: proportion of predictions
+-Cohen's Kappa: how much better your model's predictions are compared to random chance, adjusting for the possibility that a model could get a reasonably high accuracy just by chance (for example if classes are imbalanced) 
+
+## Feature Selection
+
+Now that we have a high-performing model, we have to ask: Do we actually need all 19 variables to get this result? In biology, simpler models are often more reproducible and easier to explain. By using Variable Importance, we can identify which markers (like specific isotope ratios) are actually driving the classification and prune the 'noise' from our data.
+
+Some algorithms, like random forest, have a built in way of assessing variable importance, but many models do not. For these models, CARET uses a filter approach where ROC curve analysis is conducted and the area under the curve for each individual variable is used as a measure of importance.
+
+(For those wondering, d13C and d15N represent the stable isotope ratios of carbon (13C/12C) and nitrogen (15N14N) found in animal feces.)
+
+```{r feature_selection, message=FALSE, warning=FALSE}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       FEATURE SELECTION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Select the most important variables
+Imp <- varImp(Fit1, scale = FALSE)
+
+# Make a plot of which variables are the most important
+plot(Imp, top = 20)
+
+# Order variables by importance, descending, and take the top 15
+top15 <- Imp$importance |>
+  arrange(desc(Overall)) |>
+  head(15)
+
+# Fix dummy variables
+selected_vars <- rownames(top15)
+selected_vars[selected_vars == "MonthNovember"] <- "Month"
+selected_vars[selected_vars == "Locationmiddle"] <- "Location"
+selected_vars <- unique(selected_vars)
+
+# Subset the training set to contain only those variables
+featDF<-Train_clean[,selected_vars]
+
+```
+
+* Recursive Feature Elimination (RFE) leverages nested cross validation to recursively eliminate features to some optimal number. All features are ranked by importance and then unimportance. Features are removed to achieve optimal model performance. Note that this can take a very long time!
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                       FEATURE SELECTION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# This function generates a control object that can be used to specify the details of the feature selection algorithms used in this package
+
+rctrl1 <- rfeControl(method = "cv",
+                     functions = caretFuncs,
+                     allowParallel = F)
+
+trainCtl1 <- trainControl(method = "cv",
+                          number=3,
+                          classProbs = TRUE,
+                          allowParallel = F)
+
+# We will set a seed so we end up with the same split 
+set.seed(24)
+
+# Run simple backward selection 
+Fit8 <- rfe(x = Train_clean[, !names(Train_clean) %in% "Species"], # Cannot include outcome in input data
+            y = Train_clean$Species,
+            sizes = c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100),
+            method = "rf", trControl = trainCtl1, tuneLength = 10, rfeControl = rctrl1)
+
+Fit8
+```
+
+
+Above, we identified the top 15 most important features. Now comes the final test. We will train a new, leaner model (Fit9) using only these features and see if it maintains the same predictive power as our full model. This is the ultimate test of whether our feature selection actually worked.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         MODEL WITH REDUCED FEATURES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# We use the same fitControl as Fit7 (Bootstrapping + Downsampling) 
+# to keep the comparison fair.
+set.seed(825)
+
+# Conduct model fitting using x (predictors) and y (outcome)
+Fit9 <- train(x = featDF, 
+              y = Train_clean$Species, 
+              method = "rf", 
+              trControl = fitControl, 
+              tuneLength = 5)
+
+# CRITICAL STEP: We must subset the test data to ONLY include the 15 variables used in Fit9
+# Otherwise, predict() will fail.
+Test_reduced <- Test_clean[, selected_vars]
+
+# Predict and Validate
+preds_reduced <- predict(Fit9, Test_reduced)
+confusionMatrix(preds_reduced, Test$Species)
+```
+
+
+## Predictive Modeling and Validation
+
+Let's go ahead and use our random forest model with repeated k-fold cross validation (model name: Fit3) on our testing data set. This is the 'Moment of Truth.' We are now applying our model to the Test Set—data the model has never seen before. This is the only way to know if our model has actually learned the biology of animal feces, or if it simply memorized the training data.
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#               PREDICTIVE MODELING AND VALIDATION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+preds <- predict(Fit7, Test_clean)
+confusionMatrix(preds, Test_clean$Species) # positive="Case" if you had a binary outcome
+```
+
+Interpreting the results:
+1. The Matrix (The Raw Counts)
+- The Reference (columns) is the ground truth (what the animal actually was), and the Prediction (rows) is what our model guessed.
+- The Diagonal: The numbers running from the top-left to bottom-right (9, 3, 7) are the correct predictions.
+- The Off-Diagonal: Any number not on that diagonal is an error. For example, the model predicted "coyote" 4 times when the animal was actually a "bobcat."
+
+2. Key Performance Metrics
+Below the matrix, we see statistics. Let's focus on the three using the Coyote class as an example:
+
+- Accuracy (0.5278): This is the "big picture" number. It tells us that overall, the model was correct about 53% of the time.
+- Sensitivity / Recall (Coyote: 0.3333): This answers: "Of all the actual Coyotes in the test set, how many did we correctly find?" Here, we only found 33% of the coyotes. The model is struggling to identify coyotes.
+- Positive Predictive Value / Precision (Coyote: 0.3750): This answers: "Of all the times the model predicted Coyote, how many were actually Coyotes?" Only 37.5% of our "Coyote" guesses were correct.
+
+
+## Compare Models
+
+Now we will compare the different models. Only models of the same type can be compared with the same accuracy measures.
+
+```{r compare models}
+resamps <- resamples(list(Fit5 = Fit5, Fit6 = Fit6, Fit7 = Fit7))
+
+summary(resamps)
+
+# Visualize distributions across resamples, not just point estimates
+bwplot(resamps, metric = c("Accuracy", "Kappa"))
+# or
+dotplot(resamps, metric = c("Accuracy", "Kappa"))
+```
+
+
+```{r}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                         FINAL COMPARISON
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Compare the full model (Fit7) vs the reduced model (Fit9)
+resamps_final <- resamples(list(Full_Model = Fit7, Reduced_Model = Fit9))
+
+summary(resamps_final)
+bwplot(resamps_final)
+```
+
+### Summary and Key Takeaways
+In this session, we walked through the complete Machine Learning pipeline in R. To summarize the workflow:
+
+- The Golden Rule of Splitting: We split our data into Training and Testing sets before any cleaning or imputation. This prevents "data leakage," ensuring our test set remains a true representation of unseen data.
+- Preprocessing: We used preProcess to handle missing data via KNN imputation and standardized our numeric variables. This ensures that variables with larger scales don't unfairly dominate the model.
+- Tuning via Resampling: We explored various cross-validation techniques. We learned that using trainControl and tuneLength allows caret to automatically optimize the model's hyperparameters, reducing the risk of overfitting.
+- Parsimony (Simplicity): Through Variable Importance and Recursive Feature Elimination, we learned how to strip a model down to its most essential features without sacrificing accuracy.
+- Validation: We used a Confusion Matrix to look beyond simple accuracy. By analyzing Sensitivity and Precision, we can see exactly which classes the model struggles with, providing a roadmap for future data collection.
+- Next Steps: When applying this to your own research, always start with a baseline model, visualize your confusion matrix, and always—always—validate on a held-out test set.
