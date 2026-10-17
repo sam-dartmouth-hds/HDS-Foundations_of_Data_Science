@@ -27,10 +27,11 @@ library(DESeq2) # Used for the differential testing needed for volcano plotting
 library(grid) # for formatting
 library(knitr)
 library(kableExtra)
+library(ggpmisc) # for adding trend line to the scatter plot
 ```
 
 ```{r - Find Data Files}
-setwd("~/Documents/GitHub/HDS-Foundations_of_Data_Science/week_3/final_proj_check_in")
+setwd("~/Documents/GitHub/HDS-Foundations_of_Data_Science/final_proj")
 # Set working directory
 filenames <- list.files(getwd(),pattern = ".csv") # identify all csv files in the repo 
 print(filenames)
@@ -39,7 +40,7 @@ print(filenames)
 ```{r - Read Data}
 proj_data <- list()
 
-data_path = "~/Documents/GitHub/HDS-Foundations_of_Data_Science/week_3/final_proj_check_in/"
+data_path = "~/Documents/GitHub/HDS-Foundations_of_Data_Science/final_proj/"
 # Set out repo data path
 proj_data$gene_mapping <- read.csv(paste0(data_path, filenames[2]))
 proj_data$counts <- read.csv(paste0(data_path,filenames[1])) %>% # Read in counts data
@@ -228,7 +229,16 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
   ) +
     geom_point(
       color = "darkgreen",
-      alpha = 0.6 # Set transparency for better readability of data density
+      alpha = 0.6, # Set transparency for better readability of data density
+      size = 1.5
+  ) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE, linewidth = 1.2) + # add trendline
+  # Adds the trendline equation to plot 
+  stat_poly_eq(
+    aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+    formula = y ~ x, 
+    parse = TRUE,
+    size = 3
   ) +
     labs(
       title = paste(gene1, "vs", gene2), # Set title
@@ -263,11 +273,12 @@ gene_visualize_func <- function(gene1, gene2, gene_data, metadata, covariate = N
     alpha = 0.7,
     scale = "width"
   ) +
-  geom_jitter( # Use jitter to plot actual distinct datapoints
-    width = 0.1, 
-    alpha = 0.2,
-    color = "blue",
-    size = 1
+  geom_boxplot(
+    width = 0.15,          # Make it thin so it sits neatly inside the violin
+    fill = "white",        # Contrast fill (or remove fill = "white" for transparent)
+    color = "black",
+    alpha = 0.6,
+    outlier.shape = NA     # Hide outliers to avoid duplicating points shown by jitter
   ) +
   labs( # Set labeling
     title = paste(gene1, "by", covariate_string),
@@ -432,13 +443,13 @@ rownames(counts_matrix) <- gene_names
 covariate <- "prior_treatment"  # Set your target covariate here
 
 metadata <- proj_data$metadata %>%
-  select(barcode, !!sym(covariate)) %>%   # Added missing pipe here
+  #select(barcode, !!sym(covariate)) %>%   # Added missing pipe here
   dplyr::rename(
-    sample_id = barcode, 
+    id = barcode, 
     treatment = !!sym(covariate)         # Renamed directly to 'treatment' to match downstream code
   ) %>%
-  mutate(sample_id_clean = gsub("\\-", ".", sample_id)) %>% 
-  select(sample_id_clean, treatment) %>%
+  mutate(sample_id_clean = gsub("\\-", ".", id)) %>% 
+  select(-id) %>%
   filter(treatment %in% c("Yes","No")) %>% # Filter down to the two covariate groups of interest 
   as.data.frame()
 
@@ -499,16 +510,6 @@ EnhancedVolcano(
   xlab = bquote(~Log[2] ~ "Expression Value Change"),
   ylab = bquote(~-Log[10] ~ "Adjusted P-value"), # Explicitly labeling it as adjusted
 
-  # Legend Labels
-  legendLabels = c(
-    "Not Significant", 
-    "High Expression Change", 
-    "Significant", 
-    "Significant & High Expression Change"
-  ),
-  legendLabSize = 8,       # legend text size
-  legendIconSize = 1.5,     # legend icon size
-  
   # Formatting
   pointSize = 2.0,
   labSize = 4.0,
