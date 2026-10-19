@@ -12,7 +12,48 @@ c) Train a random forest repeated 3-fold cross validation model that repeats 5 t
 
 ```{r}
 
+## a) Read in the segmentation data set and check for missing data.
+
+# read in libraries
+library(caret)
+library(glmnet)
+library(AppliedPredictiveModeling)
+
+# read in data
 data("segmentationData")
+
+## Check for missing values
+sum(is.na(segmentationData)) # no missing data so no imputation needed
+
+## b) Split this data into a training and testing data set. The original study split the data using half of the data for training and the other half for testing so let's go ahead and follow their lead. Split the data in half, use one half for training and the other half for testing. 
+
+# This code splits our data 
+trainIndex <- createDataPartition(segmentationData$Class, p = 1/2, list = FALSE, times = 1)
+
+# We assign the 2/3 of data to a training set variable
+Train <- segmentationData[ trainIndex,]
+
+# We assign the remaining 1/3 of data to a testing set variable
+Test <- segmentationData[-trainIndex,]
+
+# Let's take a look at the dimensions of our training and testing set to see if that all worked out ok
+dim(Train)
+dim(Test)
+
+## c) Train a random forest repeated 3-fold cross validation model that repeats 5 times. Make sure that "Class" is the target variable. Use all of the columns in your training data as predictors.
+
+# set parameters
+fitControl <- trainControl(method = "none")
+
+# set seed
+set.seed(825) 
+
+# model fitting
+Fit1_rf <- train(Class ~ .,
+              data = Train,
+              method = "rf",
+              trControl = fitControl,
+              verbose = FALSE)
 
 ```
 
